@@ -1,11 +1,16 @@
 package com.recruitmentAgent.demo.agent;
 
+import com.recruitmentAgent.demo.model.Job;
+import com.recruitmentAgent.demo.rag.RAGService;
 import com.recruitmentAgent.demo.service.CandidateService;
 import com.recruitmentAgent.demo.service.JobService;
 import com.recruitmentAgent.demo.service.QwenService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
+
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
@@ -24,13 +29,19 @@ public class AgentService {
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
+    @Autowired
+    private RAGService ragService;
+
     public String handle(String userInput) {
 
         try {
             long start = System.currentTimeMillis();
-            log.info("agent.handle.start inputLen={}", userInput == null ? 0 : userInput.length());
+            log.info("agent.handle.start userInput={}", userInput);
+            // 1. 调用RAG服务
+            List<Job> ragList = ragService.retrieve(userInput);;
+            String enhancedInput = "用户问题：" + userInput + "\n相关职位：" + ragList;
             // 1️⃣ 调AI
-            String aiResponse = qwenService.call(userInput);
+            String aiResponse = qwenService.call(enhancedInput);
             log.info("agent.handle.aiResponse receivedLen={} preview={}",
                     aiResponse == null ? 0 : aiResponse.length(), preview(aiResponse));
 

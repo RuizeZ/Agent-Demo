@@ -31,7 +31,7 @@ public class QwenService {
 
     // 👉 构造 Prompt（极其关键）
     String prompt = buildPrompt(userInput);
-    log.info("qwen.call.start inputLen={} promptLen={}", userInput == null ? 0 : userInput.length(), prompt.length());
+    log.info("qwen.call.start prompt={}", prompt);
 
     // 👉 请求头
     HttpHeaders headers = new HttpHeaders();
@@ -40,7 +40,7 @@ public class QwenService {
 
     // 👉 请求体
     Map<String, Object> body = new HashMap<>();
-    body.put("model", "tongyi-xiaomi-analysis-flash");
+    body.put("model", "tongyi-xiaomi-analysis-pro");
 
     body.put("messages", new Object[] {
         Map.of("role", "system", "content", "你是一个招聘AI助手"),
@@ -75,7 +75,15 @@ public class QwenService {
   // 🔥 核心：让AI输出 Tool JSON
   private String buildPrompt(String userInput) {
     return """
-        你是一个招聘系统AI，你必须从以下工具中选择一个，并返回JSON：
+        你是一个招聘系统AI。你必须根据用户输入，识别用户意图，并从以下工具中选择一个并返回JSON。
+        
+        重要规则（必须遵守）：
+        - 如果用户输入中包含一段“相关职位：[...]”，并且方括号内不是空列表（不是 []）
+          则说明系统已经为你检索到了最相关的职位。此时如果你选择 search_jobs，
+          keyword 必须取“相关职位”列表中第一条 Job 的 title（例如 Java后端），
+          不要用用户问题中的泛化词（例如 微服务、后端、开发等）。
+        - 如果“相关职位：[]”为空列表，才允许你从用户问题中提取 keyword。
+        - 只能返回 JSON，禁止输出任何解释性文字。
 
         工具：
         1. search_jobs: 根据关键词搜索职位
