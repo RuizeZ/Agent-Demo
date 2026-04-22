@@ -17,8 +17,16 @@ public class CandidateService {
 
     // 👉 Tool：根据职位描述匹配候选人
     public List<Candidate> matchCandidates(String jobDesc) {
+        String[] jobDescArr = jobDesc.split(" ");
         List<Candidate> result = candidates.stream()
-                .filter(c -> jobDesc.contains("Java") && c.getSkills().contains("Java"))
+                .filter(c -> {
+                    for (String desc : jobDescArr){
+                        if (c.getSkills().contains(desc)){
+                            return true;
+                        }
+                    }
+                    return false;
+                })
                 .toList();
         log.info("tool.match_candidates jobDescLen={} hits={}", jobDesc == null ? 0 : jobDesc.length(), result.size());
         return result;

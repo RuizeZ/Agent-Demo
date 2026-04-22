@@ -37,46 +37,40 @@ public class AgentService {
     private RAGService ragService;
 
     public String handle(String userInput) {
+        String context = userInput; // 👉 初始上下文
 
         try {
-            long start = System.currentTimeMillis();
-            log.info("agent.handle.start userInput={}", userInput);
-            // 1. 调用RAG服务
-            List<Job> ragList = ragService.retrieve(userInput);
-            ;
-            String enhancedInput = "用户问题：" + userInput + "\n相关职位：" + ragList;
-            // 1️⃣ 调AI
-            String aiResponse = qwenService.call(enhancedInput);
-            log.info("agent.handle.aiResponse receivedLen={} preview={}",
-                    aiResponse == null ? 0 : aiResponse.length(), preview(aiResponse));
+            for (int i = 0; i < 3; i++) { // 👉 最多执行3步（防死循环）
 
-            // 2️⃣ 解析JSON
-            JsonNode node;
-            try {
-                node = parseToolJson(aiResponse);
-                log.info("agent.handle.parse.ok extractedToolJsonPreview={}", preview(node.toString()));
-            } catch (JsonProcessingException e) {
-                log.warn("agent.handle.parse.fail err={} aiPreview={}", e.getOriginalMessage(), preview(aiResponse));
-                throw e;
+                // 1️⃣ 调AI（带上下文）
+                String aiResponse = qwenService.call(context);
+
+                // 👉 处理可能的 ```json
+                aiResponse = aiResponse.replace("```json", "").replace("```", "");
+
+                JsonNode node = objectMapper.readTree(aiResponse);
+
+                // 👉 如果AI说“结束”
+                if (node.has("final_answer")) {
+                    return node.get("final_answer").asText();
+                }
+
+                // 2️⃣ 获取tool
+                String tool = node.get("tool").asText();
+                JsonNode args = node.get("args");
+
+                // 3️⃣ 执行Tool
+                Object result = toolExecutor.execute(tool, args);
+
+                // 4️⃣ 把结果喂回AI（关键！！！）
+                context = context + "\n" + tool + "工具调用结果：" + result;
+
             }
 
-            JsonNode toolNode = node.get("tool");
-            if (toolNode == null || toolNode.isNull()) {
-                return "AI返回结果不是有效的工具JSON";
-            }
-            String tool = toolNode.asText();
-            log.info("agent.handle.tool tool={}", tool);
-
-            // 3️⃣ 调用对应Tool
-            tool = node.get("tool").asText();
-            JsonNode args = node.get("args");
-
-            Object result = toolExecutor.execute(tool, args);
-
-            return result.toString();
+            return "执行结束（达到最大步骤）";
 
         } catch (Exception e) {
-            log.error("agent.handle.error err={}", e.toString());
+            e.printStackTrace();
             return "系统错误";
         }
     }
