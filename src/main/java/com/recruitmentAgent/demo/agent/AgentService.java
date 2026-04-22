@@ -1,5 +1,6 @@
 package com.recruitmentAgent.demo.agent;
 
+import com.recruitmentAgent.demo.mcp.ToolExecutor;
 import com.recruitmentAgent.demo.model.Job;
 import com.recruitmentAgent.demo.rag.RAGService;
 import com.recruitmentAgent.demo.service.CandidateService;
@@ -27,6 +28,9 @@ public class AgentService {
     @Autowired
     private CandidateService candidateService;
 
+    @Autowired
+    private ToolExecutor toolExecutor;
+
     private ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
@@ -38,7 +42,8 @@ public class AgentService {
             long start = System.currentTimeMillis();
             log.info("agent.handle.start userInput={}", userInput);
             // 1. 调用RAG服务
-            List<Job> ragList = ragService.retrieve(userInput);;
+            List<Job> ragList = ragService.retrieve(userInput);
+            ;
             String enhancedInput = "用户问题：" + userInput + "\n相关职位：" + ragList;
             // 1️⃣ 调AI
             String aiResponse = qwenService.call(enhancedInput);
@@ -63,34 +68,12 @@ public class AgentService {
             log.info("agent.handle.tool tool={}", tool);
 
             // 3️⃣ 调用对应Tool
-            switch (tool) {
+            tool = node.get("tool").asText();
+            JsonNode args = node.get("args");
 
-                case "search_jobs":
-                    JsonNode keywordNode = node.path("args").path("keyword");
-                    if (keywordNode.isMissingNode() || keywordNode.isNull() || keywordNode.asText().isBlank()) {
-                        log.warn("agent.handle.args.missing tool=search_jobs missing=keyword");
-                        return "缺少参数 keyword";
-                    }
-                    String keyword = keywordNode.asText();
-                    String jobs = jobService.searchJobs(keyword).toString();
-                    log.info("agent.handle.done costMs={} tool=search_jobs", System.currentTimeMillis() - start);
-                    return jobs;
+            Object result = toolExecutor.execute(tool, args);
 
-                case "match_candidates":
-                    JsonNode descNode = node.path("args").path("jobDesc");
-                    if (descNode.isMissingNode() || descNode.isNull() || descNode.asText().isBlank()) {
-                        log.warn("agent.handle.args.missing tool=match_candidates missing=jobDesc");
-                        return "缺少参数 jobDesc";
-                    }
-                    String desc = descNode.asText();
-                    String candidates = candidateService.matchCandidates(desc).toString();
-                    log.info("agent.handle.done costMs={} tool=match_candidates", System.currentTimeMillis() - start);
-                    return candidates;
-
-                default:
-                    log.warn("agent.handle.tool.unknown tool={}", tool);
-                    return "AI没有选择合适的工具";
-            }
+            return result.toString();
 
         } catch (Exception e) {
             log.error("agent.handle.error err={}", e.toString());
@@ -111,18 +94,22 @@ public class AgentService {
     }
 
     private String extractFirstJsonObject(String s) {
-        if (s == null) return null;
+        if (s == null)
+            return null;
         int start = s.indexOf('{');
         int end = s.lastIndexOf('}');
-        if (start < 0 || end < 0 || end <= start) return null;
+        if (start < 0 || end < 0 || end <= start)
+            return null;
         return s.substring(start, end + 1);
     }
 
     private String preview(String s) {
-        if (s == null) return "null";
+        if (s == null)
+            return "null";
         String oneLine = s.replace("\n", "\\n").replace("\r", "\\r");
         int max = 120;
-        if (oneLine.length() <= max) return oneLine;
+        if (oneLine.length() <= max)
+            return oneLine;
         return oneLine.substring(0, max) + "...";
     }
 }

@@ -1,10 +1,15 @@
 package com.recruitmentAgent.demo.service;
 
 import org.springframework.web.client.RestTemplate;
+
+import com.recruitmentAgent.demo.mcp.ToolDefinition;
+import com.recruitmentAgent.demo.mcp.ToolRegistry;
+
 import org.springframework.stereotype.Service;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Map;
@@ -16,6 +21,10 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class QwenService {
+
+  @Autowired
+  private ToolRegistry toolRegistry;
+
   private static final String URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
 
   @Value("${qwen.apiKey:}")
@@ -30,7 +39,7 @@ public class QwenService {
     }
 
     // 👉 构造 Prompt（极其关键）
-    String prompt = buildPrompt(userInput);
+    String prompt = buildPrompt(userInput, toolRegistry.getTools());
     log.info("qwen.call.start prompt={}", prompt);
 
     // 👉 请求头
@@ -40,7 +49,7 @@ public class QwenService {
 
     // 👉 请求体
     Map<String, Object> body = new HashMap<>();
-    body.put("model", "tongyi-xiaomi-analysis-pro");
+    body.put("model", "qwen3.5-122b-a10b");
 
     body.put("messages", new Object[] {
         Map.of("role", "system", "content", "你是一个招聘AI助手"),
@@ -73,40 +82,38 @@ public class QwenService {
   }
 
   // 🔥 核心：让AI输出 Tool JSON
-  private String buildPrompt(String userInput) {
+  private String buildPrompt(String userInput, List<ToolDefinition> tools) {
+    StringBuilder toolDesc = new StringBuilder();
+    for (ToolDefinition tool : tools) {
+      toolDesc.append("工具名: ").append(tool.getName()).append("\n")
+          .append("描述: ").append(tool.getDescription()).append("\n")
+          .append("参数: ").append(tool.getParameters()).append("\n\n");
+    }
+
     return """
-        你是一个招聘系统AI。你必须根据用户输入，识别用户意图，并从以下工具中选择一个并返回JSON。
-        
-        重要规则（必须遵守）：
-        - 如果用户输入中包含一段“相关职位：[...]”，并且方括号内不是空列表（不是 []）
-          则说明系统已经为你检索到了最相关的职位。此时如果你选择 search_jobs，
-          keyword 必须取“相关职位”列表中第一条 Job 的 title（例如 Java后端），
-          不要用用户问题中的泛化词（例如 微服务、后端、开发等）。
-        - 如果“相关职位：[]”为空列表，才允许你从用户问题中提取 keyword。
-        - 只能返回 JSON，禁止输出任何解释性文字。
+        你是一个AI Agent，可以调用工具完成任务。
 
-        工具：
-        1. search_jobs: 根据关键词搜索职位
-           参数：keyword
-
-        2. match_candidates: 根据用户输入的职位描述，匹配候选人
-           参数：jobDesc
+        可用工具如下：
+        """ + toolDesc + """
 
         用户输入：
         """ + userInput + """
 
-        请严格返回如下格式JSON，不要解释：
+        请你选择最合适的工具，并返回JSON：
         {
           "tool": "工具名",
           "args": {
             "参数名": "参数值"
           }
         }
+
+        只返回JSON，不要解释。
         """;
   }
 
   private String preview(String s) {
-    if (s == null) return "null";
+    if (s == null)
+      return "null";
     return s.replace("\n", "\\n").replace("\r", "\\r");
   }
 }
