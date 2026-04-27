@@ -1,19 +1,13 @@
 package com.recruitmentAgent.demo.agent;
 
-import com.recruitmentAgent.demo.mcp.ToolExecutor;
-import com.recruitmentAgent.demo.model.Job;
-import com.recruitmentAgent.demo.rag.RAGService;
-import com.recruitmentAgent.demo.service.CandidateService;
-import com.recruitmentAgent.demo.service.JobService;
-import com.recruitmentAgent.demo.service.QwenService;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
-
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.recruitmentAgent.demo.mcp.ToolExecutor;
+import com.recruitmentAgent.demo.service.QwenService;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -23,18 +17,9 @@ public class AgentService {
     private QwenService qwenService;
 
     @Autowired
-    private JobService jobService;
-
-    @Autowired
-    private CandidateService candidateService;
-
-    @Autowired
     private ToolExecutor toolExecutor;
 
     private ObjectMapper objectMapper = new ObjectMapper();
-
-    @Autowired
-    private RAGService ragService;
 
     public String handle(String userInput) {
         String context = userInput; // 👉 初始上下文
@@ -73,37 +58,5 @@ public class AgentService {
             e.printStackTrace();
             return "系统错误";
         }
-    }
-
-    private JsonNode parseToolJson(String aiResponse) throws JsonProcessingException {
-        try {
-            return objectMapper.readTree(aiResponse);
-        } catch (JsonProcessingException ignored) {
-            String extracted = extractFirstJsonObject(aiResponse);
-            if (extracted == null) {
-                throw ignored;
-            }
-            return objectMapper.readTree(extracted);
-        }
-    }
-
-    private String extractFirstJsonObject(String s) {
-        if (s == null)
-            return null;
-        int start = s.indexOf('{');
-        int end = s.lastIndexOf('}');
-        if (start < 0 || end < 0 || end <= start)
-            return null;
-        return s.substring(start, end + 1);
-    }
-
-    private String preview(String s) {
-        if (s == null)
-            return "null";
-        String oneLine = s.replace("\n", "\\n").replace("\r", "\\r");
-        int max = 120;
-        if (oneLine.length() <= max)
-            return oneLine;
-        return oneLine.substring(0, max) + "...";
     }
 }
