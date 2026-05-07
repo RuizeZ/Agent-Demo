@@ -76,8 +76,12 @@ public class EmbeddingService {
             }
 
             Map embeddingObject = (Map) data.get(0);
-            if (embeddingObject == null || embeddingObject.isEmpty()) {
-                log.error("Embedding API response missing/empty 'data.embedding'. keys={} elapsedMs={}", embeddingObject.keySet(), elapsedMs);
+            if (embeddingObject == null) {
+                log.error("Embedding API response missing first 'data' entry (null). elapsedMs={}", elapsedMs);
+                return List.of();
+            }
+            if (embeddingObject.isEmpty()) {
+                log.error("Embedding API response first 'data' entry is empty. elapsedMs={}", elapsedMs);
                 return List.of();
             }
 
