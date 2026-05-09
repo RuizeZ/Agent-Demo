@@ -100,7 +100,6 @@ public class EmbeddingService {
                 }
             }
 
-            log.info("Embedding generated dims={} elapsedMs={}", result.size(), elapsedMs);
             return result;
 
         } catch (RestClientResponseException e) {

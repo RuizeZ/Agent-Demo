@@ -1,14 +1,16 @@
 package com.recruitmentAgent.demo.agent;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.recruitmentAgent.demo.mcp.ToolExecutor;
+import com.recruitmentAgent.demo.model.Job;
+import com.recruitmentAgent.demo.rag.RAGService;
 import com.recruitmentAgent.demo.service.QwenService;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @Slf4j
@@ -19,10 +21,17 @@ public class AgentService {
     @Autowired
     private ToolExecutor toolExecutor;
 
+    @Autowired
+    private RAGService ragService;
+
     private ObjectMapper objectMapper = new ObjectMapper();
 
     public String handle(String userInput) {
-        String context = userInput; // 👉 初始上下文
+        List<Job> retrieve = ragService.retrieve(userInput);
+        String context = userInput + """
+                
+                相关职位：
+                """ + retrieve; // 👉 初始上下文
 
         try {
             for (int i = 0; i < 3; i++) { // 👉 最多执行3步（防死循环）
