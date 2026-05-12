@@ -6,8 +6,13 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class Job {
+    private Long id;
 
-    private String id;          // 职位ID
-    private String title;       // 职位名称（Java后端）
-    private String description; // 职位描述（技能要求）
+    private String title;
+
+    private String description;
+
+    private String location;
+
+    private String requirement;
 }

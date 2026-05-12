@@ -6,8 +6,13 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class Candidate {
+    private Long id;
 
-    private String id;     // 候选人ID
-    private String name;   // 姓名
-    private String skills; // 技能（Java / Python）
+    private String name;
+
+    private String skills;
+
+    private String experience;
+
+    private String location;
 }

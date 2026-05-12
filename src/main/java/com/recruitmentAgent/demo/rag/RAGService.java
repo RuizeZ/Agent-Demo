@@ -1,6 +1,7 @@
 package com.recruitmentAgent.demo.rag;
 
 import com.recruitmentAgent.demo.model.Job;
+import com.recruitmentAgent.demo.service.JobService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,16 +19,14 @@ public class RAGService {
     @Autowired
     private VectorStore vectorStore;
 
-    private List<Job> jobs = List.of(
-            new Job("1", "Java后端", "Spring Boot 微服务 MySQL"),
-            new Job("2", "AI工程师", "大模型 RAG NLP"),
-            new Job("3", "前端工程师", "React Vue"));
+    @Autowired
+    private JobService jobService;
 
     // 初始化：把所有Job变成向量
     @PostConstruct
     public void init() {
-
-        for (Job job : jobs) {
+        List<Job> all = jobService.findAll();
+        for (Job job : all) {
 
             String text = job.getTitle() + " " + job.getDescription();
 

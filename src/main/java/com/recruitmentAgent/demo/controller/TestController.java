@@ -14,8 +14,8 @@ public class TestController {
         return "hello";
     }
 
-    @GetMapping("/testJob")
-    public Job testJob() {
-        return new Job("1", "Java后端", "Spring Boot");
-    }
+//    @GetMapping("/testJob")
+//    public Job testJob() {
+//        return new Job("1", "Java后端", "Spring Boot");
+//    }
 }
