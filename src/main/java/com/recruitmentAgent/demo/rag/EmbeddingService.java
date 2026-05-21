@@ -54,7 +54,6 @@ public class EmbeddingService {
         try {
             long startNs = System.nanoTime();
             ResponseEntity<Map> response = restTemplate.postForEntity(URL, request, Map.class);
-            log.info("response is: {}", response.getBody());
             long elapsedMs = (System.nanoTime() - startNs) / 1_000_000;
 
             if (!response.getStatusCode().is2xxSuccessful()) {

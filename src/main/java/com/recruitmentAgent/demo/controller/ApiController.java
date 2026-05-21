@@ -1,6 +1,8 @@
 package com.recruitmentAgent.demo.controller;
 
 import com.recruitmentAgent.demo.agent.AgentService;
+import com.recruitmentAgent.demo.rag.CandidateRAGService;
+import com.recruitmentAgent.demo.rag.RAGService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,6 +30,12 @@ public class ApiController {
 
     @Autowired
     private CandidateService candidateService;
+
+    @Autowired
+    private RAGService ragService;
+
+    @Autowired
+    private CandidateRAGService candidateRAGService;
 
     ApiController(AgentService agentService) {
         this.agentService = agentService;
@@ -60,5 +68,15 @@ public class ApiController {
                     e.toString());
             throw e;
         }
+    }
+
+    @GetMapping("/rag")
+    public List<Job> rag(@RequestParam String q) {
+        return ragService.retrieve(q);
+    }
+
+    @GetMapping("/rag/candidates")
+    public List<Candidate> candidateRag(@RequestParam String q) {
+        return candidateRAGService.retrieve(q);
     }
 }

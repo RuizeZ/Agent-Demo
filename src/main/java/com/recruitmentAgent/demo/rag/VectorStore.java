@@ -28,21 +28,14 @@ public class VectorStore {
         List<Map.Entry<Job, Double>> scored = new ArrayList<>();
 
         for (int i = 0; i < vectors.size(); i++) {
-
             double sim = SimilarityUtil.cosineSimilarity(queryVector, vectors.get(i));
-
             scored.add(Map.entry(jobs.get(i), sim));
-
         }
 
         return scored.stream()
-
                 .sorted((a, b) -> Double.compare(b.getValue(), a.getValue()))
-
                 .limit(topK)
-
                 .map(Map.Entry::getKey)
-
                 .toList();
 
     }
