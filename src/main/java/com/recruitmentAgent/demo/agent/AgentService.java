@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.recruitmentAgent.demo.mcp.ToolExecutor;
 import com.recruitmentAgent.demo.model.Job;
+import com.recruitmentAgent.demo.rag.CandidateRAGService;
 import com.recruitmentAgent.demo.rag.RAGService;
 import com.recruitmentAgent.demo.service.QwenService;
 import lombok.extern.slf4j.Slf4j;
@@ -19,53 +20,44 @@ public class AgentService {
     private QwenService qwenService;
 
     @Autowired
-    private ToolExecutor toolExecutor;
-
-    @Autowired
     private RAGService ragService;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private CandidateRAGService candidateRAGService;
 
     public String handle(String userInput) {
-        List<Job> retrieve = ragService.retrieve(userInput);
-        String context = userInput + """
-                
-                相关职位：
-                """ + retrieve; // 👉 初始上下文
 
-        try {
-            for (int i = 0; i < 3; i++) { // 👉 最多执行3步（防死循环）
+        // 1. 根据用户输入检索职位
+        var relatedJobs = ragService.retrieve(userInput);
 
-                // 1️⃣ 调AI（带上下文）
-                String aiResponse = qwenService.call(context);
+        // 2. 把职位信息拼成候选人检索 query
+        String jobText = relatedJobs.toString();
 
-                // 👉 处理可能的 ```json
-                aiResponse = aiResponse.replace("```json", "").replace("```", "");
+        // 3. 根据职位要求检索候选人
+        var relatedCandidates = candidateRAGService.retrieve(jobText);
 
-                JsonNode node = objectMapper.readTree(aiResponse);
+        // 4. 构造给大模型的上下文
+        String prompt = """
+            你是一个招聘助手。
 
-                // 👉 如果AI说“结束”
-                if (node.has("final_answer")) {
-                    return node.get("final_answer").asText();
-                }
+            用户需求：
+            %s
 
-                // 2️⃣ 获取tool
-                String tool = node.get("tool").asText();
-                JsonNode args = node.get("args");
+            检索到的相关职位：
+            %s
 
-                // 3️⃣ 执行Tool
-                Object result = toolExecutor.execute(tool, args);
+            检索到的相关候选人：
+            %s
 
-                // 4️⃣ 把结果喂回AI（关键！！！）
-                context = context + "\n" + tool + "工具调用结果：" + result;
+            请你根据以上信息，给出：
+            1. 推荐的职位
+            2. 推荐的候选人
+            3. 推荐理由
 
-            }
+            不要编造不存在的信息。
+            """.formatted(userInput, relatedJobs, relatedCandidates);
 
-            return "执行结束（达到最大步骤）";
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "系统错误";
-        }
+        // 5. 让千问总结
+        return qwenService.call(prompt);
     }
 }

@@ -39,8 +39,8 @@ public class QwenService {
     }
 
     // 👉 构造 Prompt（极其关键）
-    String prompt = buildPrompt(userInput, toolRegistry.getTools());
-    log.info("qwen.call.start prompt={}", prompt);
+//    String prompt = buildPrompt(userInput, toolRegistry.getTools());
+//    log.info("qwen.call.start prompt={}", prompt);
 
     // 👉 请求头
     HttpHeaders headers = new HttpHeaders();
@@ -53,7 +53,7 @@ public class QwenService {
 
     body.put("messages", new Object[] {
         Map.of("role", "system", "content", "你是一个招聘AI助手"),
-        Map.of("role", "user", "content", prompt)
+        Map.of("role", "user", "content", userInput)
     });
 
     HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
