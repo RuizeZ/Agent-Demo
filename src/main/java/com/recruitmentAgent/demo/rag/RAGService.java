@@ -1,6 +1,8 @@
 package com.recruitmentAgent.demo.rag;
 
+import com.recruitmentAgent.demo.mapper.JobEmbeddingMapper;
 import com.recruitmentAgent.demo.model.Job;
+import com.recruitmentAgent.demo.model.JobEmbedding;
 import com.recruitmentAgent.demo.service.JobService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,9 @@ public class RAGService {
     @Autowired
     private JobService jobService;
 
+    @Autowired
+    private JobEmbeddingMapper jobEmbeddingMapper;
+
     // 初始化：把所有Job变成向量
     @PostConstruct
     public void init() {
@@ -29,7 +34,7 @@ public class RAGService {
 
         for (Job job : all) {
             String text = buildJobText(job);
-            List<Double> vector = embeddingService.embed(text);
+            List<Double> vector = getOrCreateEmbedding(job, text);
             vectorStore.add(job, vector);
         }
         log.info("RAG 初始化完成，职位数量：{}", all.size());
@@ -39,6 +44,28 @@ public class RAGService {
     public List<Job> retrieve(String query) {
         List<Double> queryVector = embeddingService.embed(query);
         return vectorStore.search(queryVector, 2);
+    }
+
+    private List<Double> getOrCreateEmbedding(Job job, String content) {
+        JobEmbedding cached = jobEmbeddingMapper.findByJobId(job.getId());
+
+        if (cached != null) {
+            System.out.println("读取职位向量缓存，jobId=" + job.getId());
+            return EmbeddingJsonUtil.fromJson(cached.getEmbedding());
+        }
+
+        System.out.println("生成职位向量，jobId=" + job.getId());
+
+        List<Double> vector = embeddingService.embed(content);
+
+        JobEmbedding jobEmbedding = new JobEmbedding();
+        jobEmbedding.setJobId(job.getId());
+        jobEmbedding.setContent(content);
+        jobEmbedding.setEmbedding(EmbeddingJsonUtil.toJson(vector));
+
+        jobEmbeddingMapper.insert(jobEmbedding);
+
+        return vector;
     }
 
     private String buildJobText(Job job) {
