@@ -18,4 +18,12 @@ public interface JobEmbeddingMapper {
         VALUES (#{jobId}, #{content}, #{embedding})
     """)
     void insert(JobEmbedding jobEmbedding);
+
+    @Update("""
+    UPDATE job_embedding
+    SET content = #{content},
+        embedding = #{embedding}
+    WHERE job_id = #{jobId}
+""")
+    void update(JobEmbedding jobEmbedding);
 }

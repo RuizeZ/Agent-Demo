@@ -5,6 +5,7 @@ import com.recruitmentAgent.demo.model.CandidateEmbedding;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 @Mapper
 public interface CandidateEmbeddingMapper {
@@ -21,4 +22,12 @@ public interface CandidateEmbeddingMapper {
         VALUES (#{candidateId}, #{content}, #{embedding})
     """)
     void insert(CandidateEmbedding candidateEmbedding);
+
+    @Update("""
+    UPDATE candidate_embedding
+    SET content = #{content},
+        embedding = #{embedding}
+    WHERE candidate_id = #{candidateId}
+""")
+    void update(CandidateEmbedding candidateEmbedding);
 }

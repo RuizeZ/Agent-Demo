@@ -49,9 +49,22 @@ public class RAGService {
     private List<Double> getOrCreateEmbedding(Job job, String content) {
         JobEmbedding cached = jobEmbeddingMapper.findByJobId(job.getId());
 
-        if (cached != null) {
+        if (cached != null && content.equals(cached.getContent())) {
             System.out.println("读取职位向量缓存，jobId=" + job.getId());
             return EmbeddingJsonUtil.fromJson(cached.getEmbedding());
+        }
+
+        if (cached != null) {
+            System.out.println("职位内容变化，刷新向量缓存，jobId=" + job.getId());
+
+            List<Double> vector = embeddingService.embed(content);
+
+            cached.setContent(content);
+            cached.setEmbedding(EmbeddingJsonUtil.toJson(vector));
+
+            jobEmbeddingMapper.update(cached);
+
+            return vector;
         }
 
         System.out.println("生成职位向量，jobId=" + job.getId());

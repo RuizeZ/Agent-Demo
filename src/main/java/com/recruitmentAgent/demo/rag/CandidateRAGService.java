@@ -52,9 +52,22 @@ public class CandidateRAGService {
     private List<Double> getOrCreateEmbedding(Candidate candidate, String content) {
         CandidateEmbedding cached = candidateEmbeddingMapper.findByCandidateId(candidate.getId());
 
-        if (cached != null) {
+        if (cached != null && content.equals(cached.getContent())) {
             System.out.println("读取候选人向量缓存，candidateId=" + candidate.getId());
             return EmbeddingJsonUtil.fromJson(cached.getEmbedding());
+        }
+
+        if (cached != null) {
+            System.out.println("候选人内容变化，刷新向量缓存，candidateId=" + candidate.getId());
+
+            List<Double> vector = embeddingService.embed(content);
+
+            cached.setContent(content);
+            cached.setEmbedding(EmbeddingJsonUtil.toJson(vector));
+
+            candidateEmbeddingMapper.update(cached);
+
+            return vector;
         }
 
         System.out.println("生成候选人向量，candidateId=" + candidate.getId());
