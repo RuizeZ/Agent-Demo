@@ -7,6 +7,8 @@ import com.recruitmentAgent.demo.model.Job;
 import com.recruitmentAgent.demo.rag.CandidateRAGService;
 import com.recruitmentAgent.demo.rag.RAGService;
 import com.recruitmentAgent.demo.service.QwenService;
+import com.recruitmentAgent.demo.skill.RecommendCandidateSkill;
+import com.recruitmentAgent.demo.skill.SearchJobSkill;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,39 +27,26 @@ public class AgentService {
     @Autowired
     private CandidateRAGService candidateRAGService;
 
+    @Autowired
+    private SearchJobSkill searchJobSkill;
+
+    @Autowired
+    private RecommendCandidateSkill recommendCandidateSkill;
+
     public String handle(String userInput) {
+        if (userInput.contains("职位")
+                || userInput.contains("工作")
+                || userInput.contains("岗位")) {
 
-        // 1. 根据用户输入检索职位
-        var relatedJobs = ragService.retrieve(userInput);
+            return searchJobSkill.execute(userInput);
+        }
 
-        // 2. 把职位信息拼成候选人检索 query
-        String jobText = relatedJobs.toString();
+        if (userInput.contains("候选人")
+                || userInput.contains("推荐")) {
 
-        // 3. 根据职位要求检索候选人
-        var relatedCandidates = candidateRAGService.retrieve(jobText);
+            return recommendCandidateSkill.execute(userInput);
+        }
 
-        // 4. 构造给大模型的上下文
-        String prompt = """
-            你是一个招聘助手。
-
-            用户需求：
-            %s
-
-            检索到的相关职位：
-            %s
-
-            检索到的相关候选人：
-            %s
-
-            请你根据以上信息，给出：
-            1. 推荐的职位
-            2. 推荐的候选人
-            3. 推荐理由
-
-            不要编造不存在的信息。
-            """.formatted(userInput, relatedJobs, relatedCandidates);
-
-        // 5. 让千问总结
-        return qwenService.call(prompt);
+        return "无法识别用户意图";
     }
 }
