@@ -1,20 +1,16 @@
 package com.recruitmentAgent.demo.skill;
 
-import com.recruitmentAgent.demo.model.Candidate;
-import com.recruitmentAgent.demo.rag.CandidateRAGService;
+import com.recruitmentAgent.demo.tool.CandidateSearchTool;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Component
 public class RecommendCandidateSkill implements Skill {
 
-    private final CandidateRAGService candidateRAGService;
 
-    public RecommendCandidateSkill(
-            CandidateRAGService candidateRAGService
-    ) {
-        this.candidateRAGService = candidateRAGService;
+    private final CandidateSearchTool candidateSearchTool;
+
+    public RecommendCandidateSkill(CandidateSearchTool candidateSearchTool) {
+        this.candidateSearchTool = candidateSearchTool;
     }
 
     @Override
@@ -25,9 +21,6 @@ public class RecommendCandidateSkill implements Skill {
     @Override
     public String execute(String input) {
 
-        List<Candidate> candidates =
-                candidateRAGService.retrieve(input);
-
-        return candidates.toString();
+        return candidateSearchTool.execute(input);
     }
 }
