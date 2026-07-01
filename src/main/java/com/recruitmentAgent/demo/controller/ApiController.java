@@ -1,6 +1,7 @@
 package com.recruitmentAgent.demo.controller;
 
 import com.recruitmentAgent.demo.agent.AgentService;
+import com.recruitmentAgent.demo.mcp.McpClient;
 import com.recruitmentAgent.demo.rag.CandidateRAGService;
 import com.recruitmentAgent.demo.rag.RAGService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,9 @@ public class ApiController {
 
     @Autowired
     private CandidateRAGService candidateRAGService;
+
+    @Autowired
+    private McpClient mcpClient;
 
     ApiController(AgentService agentService) {
         this.agentService = agentService;
@@ -78,5 +82,10 @@ public class ApiController {
     @GetMapping("/rag/candidates")
     public List<Candidate> candidateRag(@RequestParam String q) {
         return candidateRAGService.retrieve(q);
+    }
+
+    @GetMapping("/mcp/tools")
+    public Object mcpTools() {
+        return mcpClient.listTools();
     }
 }
