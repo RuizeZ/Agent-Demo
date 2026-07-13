@@ -21,10 +21,9 @@ public class JobSearchTool implements Tool {
     }
 
     @Override
-    public String execute(String input) {
+    public List<Job> execute(String input) {
 
-        List<Job> jobs = ragService.retrieve(input);
+         return ragService.retrieve(input);
 
-        return jobs.toString();
     }
 }

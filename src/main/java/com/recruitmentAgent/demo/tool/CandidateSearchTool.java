@@ -20,15 +20,13 @@ public class CandidateSearchTool implements Tool {
 
     @Override
     public String name() {
-        return "candidate_search_tool";
+        return "candidate_search";
     }
 
     @Override
-    public String execute(String input) {
+    public List<Candidate> execute(String input) {
 
-        List<Candidate> candidates =
-                candidateRAGService.retrieve(input);
+         return candidateRAGService.retrieve(input);
 
-        return candidates.toString();
     }
 }

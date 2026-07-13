@@ -1,16 +1,16 @@
 package com.recruitmentAgent.demo.skill;
 
+import com.recruitmentAgent.demo.mcp.McpClient;
 import com.recruitmentAgent.demo.tool.CandidateSearchTool;
 import org.springframework.stereotype.Component;
 
 @Component
 public class RecommendCandidateSkill implements Skill {
 
+    private final McpClient mcpClient;
 
-    private final CandidateSearchTool candidateSearchTool;
-
-    public RecommendCandidateSkill(CandidateSearchTool candidateSearchTool) {
-        this.candidateSearchTool = candidateSearchTool;
+    public RecommendCandidateSkill(McpClient mcpClient) {
+        this.mcpClient = mcpClient;
     }
 
     @Override
@@ -20,7 +20,6 @@ public class RecommendCandidateSkill implements Skill {
 
     @Override
     public String execute(String input) {
-
-        return candidateSearchTool.execute(input);
+        return mcpClient.searchCandidate(input);
     }
 }

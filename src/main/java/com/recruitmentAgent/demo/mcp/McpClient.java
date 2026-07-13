@@ -40,4 +40,13 @@ public class McpClient {
 
         return result.toString();
     }
+
+    public String searchCandidate(String query) {
+        Object result = callTool(
+                "candidate_search",
+                Map.of("query", query)
+        );
+
+        return result.toString();
+    }
 }
