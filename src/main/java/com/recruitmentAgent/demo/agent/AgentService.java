@@ -9,6 +9,8 @@ import com.recruitmentAgent.demo.rag.RAGService;
 import com.recruitmentAgent.demo.service.QwenService;
 import com.recruitmentAgent.demo.skill.RecommendCandidateSkill;
 import com.recruitmentAgent.demo.skill.SearchJobSkill;
+import com.recruitmentAgent.demo.skill.Skill;
+import com.recruitmentAgent.demo.skill.SkillRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,35 +20,34 @@ import java.util.List;
 @Service
 @Slf4j
 public class AgentService {
-    @Autowired
-    private QwenService qwenService;
+    private final SkillRouterService skillRouterService;
+    private final SkillRegistry skillRegistry;
 
-    @Autowired
-    private RAGService ragService;
-
-    @Autowired
-    private CandidateRAGService candidateRAGService;
-
-    @Autowired
-    private SearchJobSkill searchJobSkill;
-
-    @Autowired
-    private RecommendCandidateSkill recommendCandidateSkill;
+    public AgentService(SkillRouterService skillRouterService, SkillRegistry skillRegistry) {
+        this.skillRouterService = skillRouterService;
+        this.skillRegistry = skillRegistry;
+    }
 
     public String handle(String userInput) {
-        if (userInput.contains("职位")
-                || userInput.contains("工作")
-                || userInput.contains("岗位")) {
+        // 1. 让千问选择 Skill
+        SkillSelection selection =
+                skillRouterService.selectSkill(userInput);
 
-            return searchJobSkill.execute(userInput);
-        }
+        System.out.println(
+                "Agent 选择 Skill："
+                        + selection.getSkill()
+        );
 
-        if (userInput.contains("候选人")
-                || userInput.contains("推荐")) {
+        System.out.println(
+                "Skill 输入："
+                        + selection.getInput()
+        );
 
-            return recommendCandidateSkill.execute(userInput);
-        }
+        // 2. 根据名称从 Registry 中取得 Skill
+        Skill skill =
+                skillRegistry.getSkill(selection.getSkill());
 
-        return "无法识别用户意图";
+        // 3. 执行 Skill
+        return skill.execute(selection.getInput());
     }
 }

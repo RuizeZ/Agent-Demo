@@ -18,8 +18,12 @@ public class SearchJobSkill implements Skill {
     }
 
     @Override
-    public String execute(String input) {
+    public String description() {
+        return "根据用户输入的技术方向、岗位名称、工作地点等条件搜索相关职位";
+    }
 
+    @Override
+    public String execute(String input) {
         return mcpClient.searchJob(input);
     }
 }

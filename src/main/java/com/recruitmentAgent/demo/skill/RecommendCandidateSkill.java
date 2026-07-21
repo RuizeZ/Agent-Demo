@@ -19,6 +19,11 @@ public class RecommendCandidateSkill implements Skill {
     }
 
     @Override
+    public String description() {
+        return "根据职位要求、技术栈、经验和地点等条件推荐合适的候选人";
+    }
+
+    @Override
     public String execute(String input) {
         return mcpClient.searchCandidate(input);
     }

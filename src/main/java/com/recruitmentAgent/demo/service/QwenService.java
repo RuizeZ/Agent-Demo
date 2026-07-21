@@ -49,7 +49,7 @@ public class QwenService {
 
     // 👉 请求体
     Map<String, Object> body = new HashMap<>();
-    body.put("model", "qwen3.5-122b-a10b");
+    body.put("model", "qwen3.5-plus-2026-04-20");
 
     body.put("messages", new Object[] {
         Map.of("role", "system", "content", "你是一个招聘AI助手"),
