@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class CandidateSearchTool implements Tool {
+public class CandidateSearchTool implements Tool<List<Candidate>> {
 
     private final CandidateRAGService candidateRAGService;
 

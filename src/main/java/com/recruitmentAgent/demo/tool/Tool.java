@@ -1,7 +1,7 @@
 package com.recruitmentAgent.demo.tool;
 
-public interface Tool {
+public interface Tool<T> {
     String name();
 
-    Object execute(String input);
+    T execute(String input);
 }

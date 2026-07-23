@@ -1,5 +1,6 @@
 package com.recruitmentAgent.demo.tool;
 
+import com.recruitmentAgent.demo.model.Candidate;
 import com.recruitmentAgent.demo.model.Job;
 import com.recruitmentAgent.demo.rag.RAGService;
 import org.springframework.stereotype.Component;
@@ -7,7 +8,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class JobSearchTool implements Tool {
+public class JobSearchTool implements Tool<List<Job>> {
 
     private final RAGService ragService;
 

@@ -3,11 +3,13 @@ package com.recruitmentAgent.demo.controller;
 import com.recruitmentAgent.demo.mcp.McpCallRequest;
 import com.recruitmentAgent.demo.tool.CandidateSearchTool;
 import com.recruitmentAgent.demo.tool.JobSearchTool;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
+@Profile("legacy-mcp")
 @RestController
 @RequestMapping("/mcp")
 public class McpToolController {
